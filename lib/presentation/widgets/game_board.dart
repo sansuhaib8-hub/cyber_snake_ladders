@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
-import 'dart:ui';
 import '../controllers/game_controller.dart';
 import '../../core/constants/game_constants.dart';
 import '../painters/snake_painter.dart';
@@ -51,48 +50,51 @@ class GameBoard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(24),
               child: Stack(
                 children: [
-                  // ===== گریدی خانە بنەڕەتییەکان بە glassmorphism =====
-                  GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: 100,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
-                    itemBuilder: (context, index) {
-                      int row = index ~/ 10;
-                      int col = index % 10;
-                      int actualRow = 9 - row;
-                      int actualCol = (actualRow % 2 == 1) ? (9 - col) : col;
-                      int cellNumber = actualRow * 10 + actualCol + 1;
+                  RepaintBoundary(
+                    child: GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: 100,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
+                      itemBuilder: (context, index) {
+                        int row = index ~/ 10;
+                        int col = index % 10;
+                        int actualRow = 9 - row;
+                        int actualCol = (actualRow % 2 == 1) ? (9 - col) : col;
+                        int cellNumber = actualRow * 10 + actualCol + 1;
 
-                      final isSnakeHead = GameConstants.snakes.containsKey(cellNumber);
-                      final isLadderFoot = GameConstants.ladders.containsKey(cellNumber);
-                      final isSpecial = isSnakeHead || isLadderFoot;
-                      final isChecker = (actualRow + actualCol) % 2 == 0;
+                        final isSnakeHead = GameConstants.snakes.containsKey(cellNumber);
+                        final isLadderFoot = GameConstants.ladders.containsKey(cellNumber);
+                        final isSpecial = isSnakeHead || isLadderFoot;
+                        final isChecker = (actualRow + actualCol) % 2 == 0;
 
-                      return _GlassCell(
-                        cellNumber: cellNumber,
-                        isChecker: isChecker,
-                        isSpecial: isSpecial,
-                        specialColor: isSnakeHead
-                            ? const Color(0xFFFF2A6D)
-                            : isLadderFoot
-                                ? const Color(0xFFFFCC00)
-                                : null,
-                      );
-                    },
+                        return _GlassCell(
+                          cellNumber: cellNumber,
+                          isChecker: isChecker,
+                          isSpecial: isSpecial,
+                          specialColor: isSnakeHead
+                              ? const Color(0xFFFF2A6D)
+                              : isLadderFoot
+                                  ? const Color(0xFFFFCC00)
+                                  : null,
+                        );
+                      },
+                    ),
                   ),
 
-                  // ===== کیشانی پەیژە و مار =====
-                  CustomPaint(
-                    size: Size(boardSize, boardSize),
-                    painter: LadderPainter(ladders: GameConstants.ladders, cellSize: cellSize),
+                  RepaintBoundary(
+                    child: CustomPaint(
+                      size: Size(boardSize, boardSize),
+                      painter: LadderPainter(ladders: GameConstants.ladders, cellSize: cellSize),
+                    ),
                   ),
-                  CustomPaint(
-                    size: Size(boardSize, boardSize),
-                    painter: SnakePainter(snakes: GameConstants.snakes, cellSize: cellSize),
+                  RepaintBoundary(
+                    child: CustomPaint(
+                      size: Size(boardSize, boardSize),
+                      painter: SnakePainter(snakes: GameConstants.snakes, cellSize: cellSize),
+                    ),
                   ),
 
-                  // ===== مۆرەی یاریزانەکان =====
                   ...state.players.asMap().entries.map((entry) {
                     final index = entry.key;
                     final player = entry.value;
@@ -108,7 +110,6 @@ class GameBoard extends ConsumerWidget {
                     );
                   }),
 
-                  // ===== ڕووناکی شووشەیی سەرەوەی بۆرد (glass sheen) =====
                   IgnorePointer(
                     child: Container(
                       decoration: BoxDecoration(
@@ -117,7 +118,7 @@ class GameBoard extends ConsumerWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.white.withValues(alpha: 0.06),
+                            Colors.white.withValues(alpha: 0.05),
                             Colors.transparent,
                             Colors.transparent,
                           ],
@@ -144,7 +145,7 @@ class GameBoard extends ConsumerWidget {
   }
 }
 
-/// خانەیەکی تاکە بە شێوازی شووشەیی (glassmorphism)
+/// خانەیەکی تاکە بە شێوازی شووشەیی (بێ BackdropFilter بۆ خێرایی باشتر)
 class _GlassCell extends StatelessWidget {
   final int cellNumber;
   final bool isChecker;
@@ -160,14 +161,20 @@ class _GlassCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = isChecker
-        ? const Color(0xFF112233)
-        : const Color(0xFF0D1A28);
+    final baseColor = isChecker ? const Color(0xFF112233) : const Color(0xFF0D1A28);
 
     return Container(
       margin: const EdgeInsets.all(1.5),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            baseColor.withValues(alpha: 0.9),
+            baseColor.withValues(alpha: 0.6),
+          ],
+        ),
         border: Border.all(
           color: isSpecial
               ? specialColor!.withValues(alpha: 0.5)
@@ -177,58 +184,23 @@ class _GlassCell extends StatelessWidget {
         boxShadow: isSpecial
             ? [
                 BoxShadow(
-                  color: specialColor!.withValues(alpha: 0.35),
-                  blurRadius: 10,
+                  color: specialColor!.withValues(alpha: 0.3),
+                  blurRadius: 6,
                   spreadRadius: 0.5,
                 ),
               ]
             : null,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  baseColor.withValues(alpha: 0.85),
-                  baseColor.withValues(alpha: 0.55),
-                ],
-              ),
-            ),
-            child: Stack(
-              children: [
-                // ڕووناکی نازک لەسەرەوەی خانە
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 6,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                      color: Colors.white.withValues(alpha: 0.06),
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Text(
-                    '$cellNumber',
-                    style: TextStyle(
-                      color: isSpecial
-                          ? specialColor!.withValues(alpha: 0.85)
-                          : Colors.white.withValues(alpha: 0.3),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                ),
-              ],
-            ),
+      child: Center(
+        child: Text(
+          '$cellNumber',
+          style: TextStyle(
+            color: isSpecial
+                ? specialColor!.withValues(alpha: 0.85)
+                : Colors.white.withValues(alpha: 0.3),
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'monospace',
           ),
         ),
       ),
