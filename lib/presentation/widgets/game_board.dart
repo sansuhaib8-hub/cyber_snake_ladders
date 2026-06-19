@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 import '../controllers/game_controller.dart';
 import '../../core/constants/game_constants.dart';
+import '../painters/snake_painter.dart';
+import '../painters/ladder_painter.dart';
 
 class GameBoard extends ConsumerWidget {
   const GameBoard({super.key});
@@ -21,21 +23,19 @@ class GameBoard extends ConsumerWidget {
             width: boardSize,
             height: boardSize,
             decoration: BoxDecoration(
-              color: const Color(0xFF080A16),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.cyan.withValues(alpha: 0.3), width: 2),
-              boxShadow: [
-                BoxShadow(color: Colors.cyan.withValues(alpha: 0.1), blurRadius: 20, spreadRadius: 2),
-              ],
+              color: const Color(0xFF0F111A),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.cyan.withOpacity(0.3), width: 1.5),
             ),
             child: Stack(
               children: [
-                // ١. تۆڕی خانە شوشەییە 3D یەکان
+                // ١. تۆڕی خانەکانی بۆردەکە (Grid)
                 GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: 100,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
                   itemBuilder: (context, index) {
+                    // فۆرمولەی ڕاست بۆ هاوتاکردنی خانەکان لەگەڵ پەینتەرەکان
                     int row = index ~/ 10;
                     int col = index % 10;
                     
@@ -43,61 +43,58 @@ class GameBoard extends ConsumerWidget {
                     int actualCol = (actualRow % 2 == 1) ? (9 - col) : col;
                     int cellNumber = actualRow * 10 + actualCol + 1;
 
-                    bool isEven = (actualRow + actualCol) % 2 == 0;
-
                     return Container(
-                      margin: const EdgeInsets.all(1.5),
+                      margin: const EdgeInsets.all(1),
                       decoration: BoxDecoration(
-                        // دیزاینی شوشەیی نیمچە ڕووناک
-                        color: isEven ? Colors.white.withValues(alpha: 0.04) : Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 0.5),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.4), offset: const Offset(1, 1), blurRadius: 1),
-                        ],
+                        color: (actualRow + actualCol) % 2 == 0
+                            ? Colors.white.withOpacity(0.02)
+                            : Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: Center(
                         child: Text(
                           '$cellNumber',
-                          style: const TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.bold),
+                          style: const TextStyle(color: Colors.white24, fontSize: 10),
                         ),
                       ),
                     );
                   },
                 ),
 
-                // ٢. کێشانی مار و پەیژە ئەکشنەکان بەپێی پۆزیشنی ڕاستەقینە
+                // ٢. پەیژە ڕەسەنەکانت
                 CustomPaint(
                   size: Size(boardSize, boardSize),
-                  painter: BoardElementsPainter(cellSize: cellSize),
+                  painter: LadderPainter(ladders: GameConstants.ladders, cellSize: cellSize),
                 ),
 
-                // ٣. پیشاندانی مۆرەی یاریزانەکان لەسەر بۆردەکە
+                // ٣. مارە ڕەسەنەکانت
+                CustomPaint(
+                  size: Size(boardSize, boardSize),
+                  painter: SnakePainter(snakes: GameConstants.snakes, cellSize: cellSize),
+                ),
+
+                // ٤. مۆرەی یاریزانەکان (Tokens)
                 ...state.players.asMap().entries.map((entry) {
                   final index = entry.key;
                   final player = entry.value;
                   if (player.position == 0) return const SizedBox.shrink();
-
-                  final pos = _getCellOffset(player.position, cellSize, boardSize);
-                  
-                  // لادانی جیاواز بۆ مۆرەکان ئەگەر لە هەمان خانە بوون
-                  double offsetMultiplier = (index - 1) * 6.0;
+                  final pos = _getCellCenterOffset(player.position, cellSize);
 
                   return AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300),
-                    left: pos.dx + 4 + offsetMultiplier,
-                    top: pos.dy + 4 + offsetMultiplier,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeInOut,
+                    left: pos.dx - (cellSize * 0.25) + (index * 2),
+                    top: pos.dy - (cellSize * 0.25) + (index * 2),
                     child: Container(
-                      width: cellSize - 12,
-                      height: cellSize - 12,
+                      width: cellSize * 0.5,
+                      height: cellSize * 0.5,
                       decoration: BoxDecoration(
                         color: player.color,
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(color: player.color, blurRadius: 10, spreadRadius: 1),
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.5), offset: const Offset(2, 2), blurRadius: 4),
-                        ],
                         border: Border.all(color: Colors.white, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(color: player.color.withOpacity(0.5), blurRadius: 8),
+                        ],
                       ),
                       child: Center(
                         child: Text(
@@ -116,89 +113,11 @@ class GameBoard extends ConsumerWidget {
     );
   }
 
-  static Offset _getCellOffset(int cellNumber, double cellSize, double boardSize) {
-    int zeroBased = cellNumber - 1;
-    int row = zeroBased ~/ 10;
-    int col = zeroBased % 10;
-    if (row % 2 == 1) col = 9 - col;
-    return Offset(col * cellSize, (9 - row) * cellSize);
-  }
-}
-
-class BoardElementsPainter extends CustomPainter {
-  final double cellSize;
-  BoardElementsPainter({required this.cellSize});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // کێشانی پەیژە مۆدێرنەکان
-    final ladderPaint = Paint()
-      ..color = const Color(0xFFFFCC00)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5
-      ..strokeCap = StrokeCap.round;
-
-    GameConstants.ladders.forEach((start, end) {
-      final startOffset = _getCenter(start, size.width);
-      final endOffset = _getCenter(end, size.width);
-
-      // کێشانی قاچە لایەکان
-      canvas.drawLine(startOffset + const Offset(-6, 0), endOffset + const Offset(-6, 0), ladderPaint);
-      canvas.drawLine(startOffset + const Offset(6, 0), endOffset + const Offset(6, 0), ladderPaint);
-
-      // پلەکان
-      int steps = 5;
-      for (int i = 1; i < steps; i++) {
-        double t = i / steps;
-        Offset p = Offset.lerp(startOffset, endOffset, t)!;
-        canvas.drawLine(p + const Offset(-9, 0), p + const Offset(9, 0), ladderPaint..strokeWidth = 2);
-      }
-    });
-
-    // کێشانی ماری ڕاستەقینە بە لاری و زیکزاکی جوانی نیۆن
-    GameConstants.snakes.forEach((start, end) {
-      final startOffset = _getCenter(start, size.width); // سەر
-      final endOffset = _getCenter(end, size.width); // کلک
-
-      final snakePaint = Paint()
-        ..color = const Color(0xFFFF2A6D)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 5.0
-        ..strokeCap = StrokeCap.round;
-
-      final path = Path();
-      path.moveTo(startOffset.dx, startOffset.dy);
-
-      // دروستکردنی لاری زیکزاک و شەپۆلی سروشتی بۆ مارەکە
-      Offset mid1 = Offset.lerp(startOffset, endOffset, 0.3)!;
-      Offset mid2 = Offset.lerp(startOffset, endOffset, 0.7)!;
-      
-      path.cubicTo(
-        mid1.dx + 25, mid1.dy - 10,
-        mid2.dx - 25, mid2.dy + 10,
-        endOffset.dx, endOffset.dy,
-      );
-
-      // کێشانی تیشکی نیۆنی مارەکە
-      canvas.drawPath(path, snakePaint..color = const Color(0xFFFF2A6D).withValues(alpha: 0.3)..strokeWidth = 10);
-      canvas.drawPath(path, snakePaint..color = const Color(0xFFFF2A6D)..strokeWidth = 4.5);
-
-      // سەر و چاوی مارەکە (ماری واقیعی)
-      final headPaint = Paint()..color = const Color(0xFFFF2A6D)..style = PaintingStyle.fill;
-      canvas.drawCircle(startOffset, 6, headPaint);
-      canvas.drawCircle(startOffset + const Offset(-2, -2), 1.5, Paint()..color = Colors.white);
-      canvas.drawCircle(startOffset + const Offset(2, -2), 1.5, Paint()..color = Colors.white);
-    });
-  }
-
-  Offset _getCenter(int cellNumber, double boardSize) {
+  static Offset _getCellCenterOffset(int cellNumber, double cellSize) {
     int zeroBased = cellNumber - 1;
     int row = zeroBased ~/ 10;
     int col = zeroBased % 10;
     if (row % 2 == 1) col = 9 - col;
     return Offset((col + 0.5) * cellSize, (9 - row + 0.5) * cellSize);
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
