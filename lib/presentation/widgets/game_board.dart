@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../controllers/game_controller.dart';
 import '../../core/utils/board_calculator.dart';
 import '../../core/constants/game_constants.dart';
+import '../painters/snake_painter.dart';
+import '../painters/ladder_painter.dart';
 
 class GameBoard extends ConsumerWidget {
   const GameBoard({super.key});
@@ -34,20 +36,19 @@ class GameBoard extends ConsumerWidget {
           aspectRatio: 1.0,
           child: LayoutBuilder(
             builder: (context, constraints) {
+              final boardSize = Size(constraints.maxWidth, constraints.maxHeight);
               final cellSize = constraints.maxWidth / 10;
 
               return Stack(
                 children: [
+                  // Grid background
                   GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 10,
-                    ),
-                    itemCount: 100,
+                    ),                    itemCount: 100,
                     itemBuilder: (context, idx) {
                       final cellNum = BoardCalculator.getDisplayCellNumber(idx);
-                      final isSnakeHead = GameConstants.snakes.containsKey(cellNum);                      final isLadderBottom = GameConstants.ladders.containsKey(cellNum);
-
                       return Container(
                         decoration: BoxDecoration(
                           color: idx % 2 == 0
@@ -59,22 +60,42 @@ class GameBoard extends ConsumerWidget {
                           child: Text(
                             "$cellNum",
                             style: TextStyle(
-                              fontSize: cellSize * 0.3,
-                              color: isSnakeHead
-                                  ? Colors.redAccent.withValues(alpha: 0.7)
-                                  : isLadderBottom
-                                      ? Colors.amber.withValues(alpha: 0.7)
-                                      : Colors.white.withValues(alpha: 0.25),
-                              fontWeight: FontWeight.w600,
+                              fontSize: cellSize * 0.25,
+                              color: Colors.white.withValues(alpha: 0.2),
                             ),
                           ),
                         ),
                       );
                     },
                   ),
+
+                  // Draw snakes
+                  ...GameConstants.snakes.entries.map((entry) {
+                    return CustomPaint(
+                      size: boardSize,
+                      painter: SnakePainter(
+                        fromCell: entry.key,
+                        toCell: entry.value,
+                        boardSize: boardSize,
+                      ),
+                    );
+                  }),
+
+                  // Draw ladders
+                  ...GameConstants.ladders.entries.map((entry) {
+                    return CustomPaint(
+                      size: boardSize,
+                      painter: LadderPainter(
+                        fromCell: entry.key,
+                        toCell: entry.value,
+                        boardSize: boardSize,
+                      ),
+                    );
+                  }),
+
+                  // Players
                   ...List.generate(state.players.length, (index) {
-                    final player = state.players[index];
-                    final coords = BoardCalculator.getCellCoordinates(
+                    final player = state.players[index];                    final coords = BoardCalculator.getCellCoordinates(
                       player.position,
                       cellSize,
                     );
@@ -95,7 +116,8 @@ class GameBoard extends ConsumerWidget {
                             gradient: RadialGradient(
                               colors: [
                                 Colors.white,
-                                player.color,                                player.color.withValues(alpha: 0.8),
+                                player.color,
+                                player.color.withValues(alpha: 0.8),
                               ],
                             ),
                             border: Border.all(color: Colors.white, width: 2),
