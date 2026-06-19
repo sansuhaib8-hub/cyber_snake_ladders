@@ -15,6 +15,40 @@ class GameController extends StateNotifier<GameControllerState> {
         _checkWinnerUseCase = CheckWinnerUseCase(),
         super(GameControllerState.initial());
 
+  // ١. مێتۆدی نوێ بۆ زیادکردنی یاریزان بە دوگمەی (+)
+  void addPlayer() {
+    // ئەگەر کایەکە دەستی پێکردبێت یان ژمارەی یاریزانان گەیشتبێتە ٤، ڕێگا مەدە
+    if (state.players.length >= 4 || state.gameState != GameState.idle || state.players.any((p) => p.position > 0)) return;
+
+    final nextIndex = state.players.length;
+    // لیستی ئەو یاریزانە منداڵانەی کە لە دۆخی سەرەتایی فەرز کراون
+    final allPossiblePlayers = [
+      Player(id: '1', name: "یاریزان ١", color: const Color(0xFF00FFFF)),
+      Player(id: '2', name: "یاریزان ٢", color: const Color(0xFFFF00FF)),
+      Player(id: '3', name: "یاریزان ٣", color: const Color(0xFF00FF66)),
+      Player(id: '4', name: "یاریزان ٤", color: const Color(0xFFFFCC00)),
+    ];
+
+    if (nextIndex < allPossiblePlayers.length) {
+      final newPlayer = allPossiblePlayers[nextIndex];
+      state = state.copyWith(
+        players: [...state.players, newPlayer],
+        message: "👤 [ ${newPlayer.name} ] زیادکرا! 🎮",
+      );
+    }
+  }
+
+  // ٢. مێتۆدی کەمکردنەوەی یاریزان (ئەگەر کایەزان نەیویست) - ئارەزوومەندانە
+  void removePlayer() {
+    if (state.players.length <= 2 || state.players.any((p) => p.position > 0)) return;
+    final updatedPlayers = List<Player>.from(state.players)..removeLast();
+    state = state.copyWith(
+      players: updatedPlayers,
+      currentPlayerIndex: 0,
+      message: "❌ یاریزانێک کەمکرایەوە.",
+    );
+  }
+
   void rollDice() {
     if (state.gameState != GameState.idle) return;
     state = state.copyWith(gameState: GameState.rolling);
@@ -42,15 +76,13 @@ class GameController extends StateNotifier<GameControllerState> {
 
     state = state.copyWith(gameState: GameState.moving);
 
-    // جوڵاندنی یاریزان خانە بە خانە
     for (int i = currentPlayer.position + 1; i <= targetPosition; i++) {
       await Future.delayed(const Duration(milliseconds: GameConstants.moveDuration));
       _updatePlayerPosition(state.currentPlayerIndex, i);
     }
-    // پشکنینی مار و پەیژە
+    
     await _checkSnakesAndLadders();
 
-    // پشکنینی بردنەوە
     final updatedPlayer = state.players[state.currentPlayerIndex];
     if (_checkWinnerUseCase.execute(updatedPlayer.position)) {
       state = state.copyWith(
@@ -95,7 +127,8 @@ class GameController extends StateNotifier<GameControllerState> {
     final nextIndex = (state.currentPlayerIndex + 1) % state.players.length;
     state = state.copyWith(
       currentPlayerIndex: nextIndex,
-      gameState: GameState.idle,      message: "نۆرەی [ ${state.players[nextIndex].name} ] یە 🔥",
+      gameState: GameState.idle,
+      message: "نۆرەی [ ${state.players[nextIndex].name} ] یە 🔥",
     );
   }
 
@@ -104,9 +137,13 @@ class GameController extends StateNotifier<GameControllerState> {
   }
 
   void updatePlayerName(int index, String name) {
+    if (name.trim().isEmpty) return;
     final updatedPlayers = List<Player>.from(state.players);
     updatedPlayers[index] = updatedPlayers[index].copyWith(name: name);
-    state = state.copyWith(players: updatedPlayers);
+    state = state.copyWith(
+      players: updatedPlayers,
+      message: "📝 ناو گۆڕدرا بۆ [ $name ]",
+    );
   }
 }
 
@@ -125,13 +162,12 @@ class GameControllerState {
     required this.message,
   });
 
+  // سەرەتا تەنها بە ٢ یاریزان کایەکە دروست دەبێت
   factory GameControllerState.initial() {
     return GameControllerState(
       players: [
         Player(id: '1', name: "یاریزان ١", color: const Color(0xFF00FFFF)),
         Player(id: '2', name: "یاریزان ٢", color: const Color(0xFFFF00FF)),
-        Player(id: '3', name: "یاریزان ٣", color: const Color(0xFF00FF66)),
-        Player(id: '4', name: "یاریزان ٤", color: const Color(0xFFFFCC00)),
       ],
       currentPlayerIndex: 0,
       diceValue: 1,
@@ -144,7 +180,8 @@ class GameControllerState {
     List<Player>? players,
     int? currentPlayerIndex,
     int? diceValue,
-    GameState? gameState,    String? message,
+    GameState? gameState,
+    String? message,
   }) {
     return GameControllerState(
       players: players ?? this.players,

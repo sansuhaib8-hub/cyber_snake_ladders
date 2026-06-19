@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../../core/utils/board_calculator.dart';
 
 class LadderPainter extends CustomPainter {
@@ -17,80 +18,103 @@ class LadderPainter extends CustomPainter {
     final fromPos = BoardCalculator.getCellCenter(fromCell, size);
     final toPos = BoardCalculator.getCellCenter(toCell, size);
 
-    // 3D shadow
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.4)
-      ..strokeWidth = 10
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    // ١. بیرکاری ورد بۆ دیاریکردنی دووری هاوتەریبی نێوان دوو هێڵەکە
+    final double dx = toPos.dx - fromPos.dx;
+    final double dy = toPos.dy - fromPos.dy;
+    final double distance = math.sqrt(dx * dx + dy * dy);
+    if (distance == 0) return;
 
-    // Ladder rails gradient
-    final railPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0xFFFFCC00),
-          const Color(0xFFFF9900),
-          const Color(0xFFFFCC00),
-        ],
-      ).createShader(Rect.fromPoints(fromPos, toPos))
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    // Calculate perpendicular offset for two rails
-    final dx = toPos.dx - fromPos.dx;
-    final dy = toPos.dy - fromPos.dy;
-    final length = dx * dx + dy * dy;
-    if (length == 0) return;
-    
-    final perpX = -dy / length * 15;
-    final perpY = dx / length * 15;
+    // دیاریکردنی هێڵی ستوونی (Perpendicular Vector) بۆ لادانی ڕێڕەوەکان
+    final double perpX = -dy / distance * 10; // بۆشایی نێوان ڕێڕەوەکان بە ١٠ پیکسڵ
+    final double perpY = dx / distance * 10;
 
     final rail1Start = Offset(fromPos.dx + perpX, fromPos.dy + perpY);
     final rail1End = Offset(toPos.dx + perpX, toPos.dy + perpY);
     final rail2Start = Offset(fromPos.dx - perpX, fromPos.dy - perpY);
     final rail2End = Offset(toPos.dx - perpX, toPos.dy - perpY);
 
-    // Draw shadow
+    // ٢. کێشانی سێبەری قووڵی ڕێڕەوەکان (Drop Shadow)
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.6)
+      ..strokeWidth = 9
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+
+    canvas.save();
+    canvas.translate(4, 6); // گواستنەوەی سێبەرەکە بۆ خوارەوەی ڕاست
     canvas.drawLine(rail1Start, rail1End, shadowPaint);
     canvas.drawLine(rail2Start, rail2End, shadowPaint);
+    canvas.restore();
 
-    // Draw rails
+    // ٣. کێشانی ڕێڕەوە سەرەکییەکان بە شەبەنگی زێڕینی سایبەری (Cyber Gold Gradient)
+    final railPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          const Color(0xFFFFD700), // زێڕینی گەش
+          const Color(0xFFFF8C00), // پرتەقاڵی تاریک
+          const Color(0xFFFFD700),
+        ],
+      ).createShader(Rect.fromPoints(fromPos, toPos))
+      ..strokeWidth = 7
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
     canvas.drawLine(rail1Start, rail1End, railPaint);
     canvas.drawLine(rail2Start, rail2End, railPaint);
 
-    // Draw steps (rungs)
-    final numSteps = 5;
+    // ٤. کێشانی قادرمەکان (Steps/Rungs) بە شێوازی درەوشاوە
+    final double stepDistance = 25.0; // بۆشایی جێگیر لە نێوان هەر پێپەژەیەک
+    final int numSteps = (distance / stepDistance).floor();
+
     final stepPaint = Paint()
-      ..color = const Color(0xFFFFEE88)
-      ..strokeWidth = 6
+      ..color = const Color(0xFFFFE57F) // زێڕینی ڕووناک
+      ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
 
+    final stepGlowPaint = Paint()
+      ..color = const Color(0xFFFFAA00).withValues(alpha: 0.5)
+      ..strokeWidth = 9
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+    final stepShadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.5)
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+
     for (int i = 1; i <= numSteps; i++) {
-      final t = i / (numSteps + 1);
-      final stepStart = Offset(
+      final double t = i / (numSteps + 1);
+      
+      final currentRail1 = Offset(
         rail1Start.dx + (rail1End.dx - rail1Start.dx) * t,
         rail1Start.dy + (rail1End.dy - rail1Start.dy) * t,
       );
-      final stepEnd = Offset(
+      final currentRail2 = Offset(
         rail2Start.dx + (rail2End.dx - rail2Start.dx) * t,
         rail2Start.dy + (rail2End.dy - rail2Start.dy) * t,
       );
-      canvas.drawLine(stepStart, stepEnd, stepPaint);
+
+      // کێشانی سێبەری هەر قادرمەیەک لەژێریدا
+      canvas.save();
+      canvas.translate(4, 5);
+      canvas.drawLine(currentRail1, currentRail2, stepShadowPaint);
+      canvas.restore();
+
+      // کێشانی بریقەی دەوری قادرمەکە
+      canvas.drawLine(currentRail1, currentRail2, stepGlowPaint);
+      // کێشانی قادرمە سەرەکییەکە
+      canvas.drawLine(currentRail1, currentRail2, stepPaint);
     }
 
-    // 3D highlight on top
+    // ٥. هێڵی ڕووناکی تەنک لەسەر ڕێڕەوەکان (3D Specular Highlight)
     final highlightPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
-      ..strokeWidth = 2
+      ..color = Colors.white.withValues(alpha: 0.5)
+      ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawLine(
-      Offset(rail1Start.dx, rail1Start.dy - 2),
-      Offset(rail1End.dx, rail1End.dy - 2),
-      highlightPaint,
-    );
+    canvas.drawLine(rail1Start, rail1End, highlightPaint);
   }
 
   @override
