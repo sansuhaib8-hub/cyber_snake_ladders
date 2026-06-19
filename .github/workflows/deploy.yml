@@ -22,7 +22,9 @@ jobs:
           channel: stable
       
       - name: Create Android Project
-        run: flutter create . --platforms=android --force
+        run: |
+          rm -rf android/
+          flutter create . --platforms=android
       
       - name: Install dependencies
         run: flutter pub get
