@@ -55,17 +55,17 @@ jobs:
           sed -i '/flutterEmbedding/d' android/app/src/main/AndroidManifest.xml
         fi
 
-    - name: Force Android SDK 34
+    - name: Force Android SDK 34 (Direct Fix)
       run: |
+        # گۆڕینی شێوازی ناچارکردنی وەشانەکە بەبێ بەکارهێنانی afterEvaluate
         cat << 'SUBEOF' >> android/build.gradle
+        
         subprojects {
-            afterEvaluate { project ->
-                if (project.hasProperty("android")) {
-                    project.android {
-                        compileSdkVersion 34
-                        defaultConfig {
-                            targetSdkVersion 34
-                        }
+            project.plugins.withType(com.android.build.gradle.BasePlugin).configureEach {
+                project.android {
+                    compileSdkVersion 34
+                    defaultConfig {
+                        targetSdkVersion 34
                     }
                 }
             }
@@ -75,9 +75,8 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Build APK via Direct Gradle (Bypass Watcher)
+    - name: Build APK via Direct Gradle
       run: |
-        # لێرەدا فەرمانی فڵاتەر بەکارناهێنین بۆ ئەوەی لۆگەکەی کڕاش نەبێت
         cd android
         chmod +x gradlew
         ./gradlew assembleRelease --no-daemon
