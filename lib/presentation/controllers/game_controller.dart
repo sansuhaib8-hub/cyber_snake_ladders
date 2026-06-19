@@ -15,10 +15,8 @@ class GameController extends StateNotifier<GameControllerState> {
         _checkWinnerUseCase = CheckWinnerUseCase(),
         super(GameControllerState.initial());
 
-  // دوگمەی پڵەس هەمیشە ڕێگا دەدات یاریزان زیاد بکرێت ئەگەر لە ٤ کەمتر بێت
   void addPlayer() {
     if (state.players.length >= 4) return;
-
     final nextIndex = state.players.length;
     final allPossiblePlayers = [
       Player(id: '1', name: "یاریزان ١", color: const Color(0xFF00FFFF)),
@@ -34,6 +32,26 @@ class GameController extends StateNotifier<GameControllerState> {
         message: "👤 [ ${newPlayer.name} ] هاتە ناو یارییەکەوە! 🎮",
       );
     }
+  }
+
+  void removePlayer(int index) {
+    if (state.players.length <= 2) {
+      state = state.copyWith(message: "⚠️ ناتوانیت لە ٢ یاریزان کەمتر دابنێیت!");
+      return;
+    }
+    final updatedPlayers = List<Player>.from(state.players);
+    final removedPlayer = updatedPlayers.removeAt(index);
+
+    int nextTurn = state.currentPlayerIndex;
+    if (nextTurn >= updatedPlayers.length) {
+      nextTurn = 0;
+    }
+
+    state = state.copyWith(
+      players: updatedPlayers,
+      currentPlayerIndex: nextTurn,
+      message: "❌ ${removedPlayer.name} سڕایەوە.",
+    );
   }
 
   void rollDice() {
@@ -52,11 +70,8 @@ class GameController extends StateNotifier<GameControllerState> {
     final targetPosition = currentPlayer.position + steps;
 
     if (targetPosition > 100) {
-      state = state.copyWith(
-        message: "⚠️ ژمارەی دەقیقی دەوێت!",
-        gameState: GameState.idle,
-      );
-      await Future.delayed(const Duration(milliseconds: 1500));
+      state = state.copyWith(message: "⚠️ ژمانەی دەقیقی دەوێت!", gameState: GameState.idle);
+      await Future.delayed(const Duration(milliseconds: 1200));
       _nextTurn();
       return;
     }
@@ -67,15 +82,11 @@ class GameController extends StateNotifier<GameControllerState> {
       await Future.delayed(const Duration(milliseconds: GameConstants.moveDuration));
       _updatePlayerPosition(state.currentPlayerIndex, i);
     }
-    
-    await _checkSnakesAndLadders();
 
+    await _checkSnakesAndLadders();
     final updatedPlayer = state.players[state.currentPlayerIndex];
     if (_checkWinnerUseCase.execute(updatedPlayer.position)) {
-      state = state.copyWith(
-        gameState: GameState.finished,
-        message: "👑 [ ${updatedPlayer.name} ] بردییەوە! 👑",
-      );
+      state = state.copyWith(gameState: GameState.finished, message: "👑 [ ${updatedPlayer.name} ] بردییەوە! 👑");
       return;
     }
 
@@ -92,17 +103,13 @@ class GameController extends StateNotifier<GameControllerState> {
     final currentPlayer = state.players[state.currentPlayerIndex];
 
     if (GameConstants.ladders.containsKey(currentPlayer.position)) {
-      state = state.copyWith(
-        message: "🪜 [ ${currentPlayer.name} ] پەیژەیەکی دۆزییەوە! ⬆️",
-      );
+      state = state.copyWith(message: "🪜 [ ${currentPlayer.name} ] پەیژەیەکی دۆزییەوە! ⬆️");
       await Future.delayed(const Duration(milliseconds: 600));
       final newPosition = GameConstants.ladders[currentPlayer.position]!;
       _updatePlayerPosition(state.currentPlayerIndex, newPosition);
       await Future.delayed(const Duration(milliseconds: 600));
     } else if (GameConstants.snakes.containsKey(currentPlayer.position)) {
-      state = state.copyWith(
-        message: "🐍 [ ${currentPlayer.name} ] بە مارەکە گیرا! ⬇️",
-      );
+      state = state.copyWith(message: "🐍 [ ${currentPlayer.name} ] بە مارەکە گیرا! ⬇️");
       await Future.delayed(const Duration(milliseconds: 600));
       final newPosition = GameConstants.snakes[currentPlayer.position]!;
       _updatePlayerPosition(state.currentPlayerIndex, newPosition);
