@@ -20,7 +20,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 7));
+    _confettiController = ConfettiController(duration: const Duration(seconds: 5));
   }
 
   @override
@@ -34,25 +34,49 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF0D0E15),
+        backgroundColor: const Color(0xFF0A0F1D),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Color(0xFF00F0FF), width: 1.5),
         ),
         title: const Text(
-          'گۆڕینی ناوی یاریزان 📝',
-          style: TextStyle(color: Colors.white),
-          textAlign: TextAlign.right,
+          'ڕێکخستنی یاریزان ⚙️',
+          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
         ),
-        content: TextField(
-          controller: textController,
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'ناوی نوێ...',
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFFF2A6D))),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF00F0FF))),
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: textController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                hintText: 'ناوی نوێ بنووسە...',
+                hintStyle: TextStyle(color: Colors.white30),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFFF2A6D))),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF00F0FF))),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // دوگمەی تایبەت بۆ سڕینەوەی یاریزانەکە لە لیستەکە
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent.withOpacity(0.2),
+                  side: const BorderSide(color: Colors.redAccent, width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                label: const Text('سڕینەوەی ئەم یاریزانە', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  ref.read(gameControllerProvider.notifier).removePlayer(index);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -60,7 +84,10 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             child: const Text('پاشگەزبوونەوە', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00F0FF)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00F0FF),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
             onPressed: () {
               ref.read(gameControllerProvider.notifier).updatePlayerName(index, textController.text);
               Navigator.pop(context);
@@ -80,7 +107,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       builder: (context) => PopScope(
         canPop: false,
         child: Scaffold(
-          backgroundColor: Colors.black.withOpacity(0.85),
+          backgroundColor: Colors.black.withOpacity(0.9),
           body: Stack(
             children: [
               Align(
@@ -89,7 +116,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   confettiController: _confettiController,
                   blastDirectionality: BlastDirectionality.explosive,
                   shouldLoop: true,
-                  colors: const [Colors.cyan, Colors.pink, Colors.green, Colors.amber, Colors.purple],
+                  colors: const [Colors.cyan, Colors.pink, Colors.green, Colors.amber],
                 ),
               ),
               Center(
@@ -100,26 +127,24 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     color: const Color(0xFF0D0E15),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: winnerColor, width: 2.5),
-                    boxShadow: [BoxShadow(color: winnerColor.withValues(alpha: 0.4), blurRadius: 40, spreadRadius: 4)],
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text("👑", style: TextStyle(fontSize: 75)),
+                      const Text("👑", style: TextStyle(fontSize: 70)),
                       const SizedBox(height: 12),
-                      const Text("سەرکەوتن و شادی!", style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+                      const Text("سەرکەوتن!", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 16),
-                      Text(winnerName, style: TextStyle(color: winnerColor, fontSize: 34, fontWeight: FontWeight.w800, shadows: [Shadow(color: winnerColor, blurRadius: 15)])),
+                      Text(winnerName, style: TextStyle(color: winnerColor, fontSize: 30, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 28),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(backgroundColor: winnerColor, padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14)),
-                        icon: const Icon(Icons.replay, color: Colors.black),
-                        label: const Text("دووبارە یاریکردنەوە 🎮", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: winnerColor, padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12)),
                         onPressed: () {
                           _confettiController.stop();
                           ref.read(gameControllerProvider.notifier).resetGame();
                           Navigator.pop(context);
                         },
+                        child: const Text("دووبارە یاریکردنەوە 🎮", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                       )
                     ],
                   ),
@@ -145,10 +170,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF040508),
+      backgroundColor: const Color(0xFF05060B),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D0E15),
-        title: const Text('مار و پەیژەی نوێ', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF0F111A),
+        elevation: 0,
+        title: const Text('مار و پەیژەی سایبەر', style: TextStyle(color: Colors.cyan, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -158,9 +184,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               padding: const EdgeInsets.all(8),
               margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D0E15),
+                color: const Color(0xFF0F111A),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: activePlayer.color.withValues(alpha: 0.3), width: 1),
+                border: Border.all(color: activePlayer.color.withOpacity(0.3), width: 1.5),
               ),
               child: Row(
                 children: [
@@ -177,7 +203,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                       ),
                     );
                   }),
-                  // دوگمەی پڵەس هەمیشە لێرەیە مەگەر یاریزان بگاتە ٤
                   if (state.players.length < 4)
                     Padding(
                       padding: const EdgeInsets.only(left: 4.0),
@@ -190,7 +215,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                           decoration: BoxDecoration(
                             color: const Color(0xFF161824),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.cyan.withValues(alpha: 0.6), width: 1.5),
+                            border: Border.all(color: Colors.cyan.withOpacity(0.5), width: 1.5),
                           ),
                           child: const Icon(Icons.add, color: Colors.cyan, size: 26),
                         ),

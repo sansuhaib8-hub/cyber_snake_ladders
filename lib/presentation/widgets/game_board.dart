@@ -23,57 +23,66 @@ class GameBoard extends ConsumerWidget {
             width: boardSize,
             height: boardSize,
             decoration: BoxDecoration(
-              color: const Color(0xFF0F111A),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.cyan.withOpacity(0.3), width: 1.5),
+              color: const Color(0xFF060D14),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF00F0FF).withOpacity(0.2), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00F0FF).withOpacity(0.05),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                )
+              ],
             ),
             child: Stack(
               children: [
-                // ١. تۆڕی خانەکانی بۆردەکە (Grid)
+                // تۆڕی خانە ئەسڵییەکان بە پێوانەی ڕاست
                 GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: 100,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
                   itemBuilder: (context, index) {
-                    // فۆرمولەی ڕاست بۆ هاوتاکردنی خانەکان لەگەڵ پەینتەرەکان
                     int row = index ~/ 10;
                     int col = index % 10;
-                    
                     int actualRow = 9 - row;
                     int actualCol = (actualRow % 2 == 1) ? (9 - col) : col;
                     int cellNumber = actualRow * 10 + actualCol + 1;
 
                     return Container(
-                      margin: const EdgeInsets.all(1),
+                      margin: const EdgeInsets.all(1.5),
                       decoration: BoxDecoration(
                         color: (actualRow + actualCol) % 2 == 0
-                            ? Colors.white.withOpacity(0.02)
-                            : Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(4),
+                            ? const Color(0xFF0A1622).withOpacity(0.6)
+                            : const Color(0xFF0D1F30).withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.white.withOpacity(0.03), width: 0.5),
                       ),
                       child: Center(
                         child: Text(
                           '$cellNumber',
-                          style: const TextStyle(color: Colors.white24, fontSize: 10),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.25),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                          ),
                         ),
                       ),
                     );
                   },
                 ),
 
-                // ٢. پەیژە ڕەسەنەکانت
+                // کێشانی پەیژە و مارە ئەسڵییەکانت
                 CustomPaint(
                   size: Size(boardSize, boardSize),
                   painter: LadderPainter(ladders: GameConstants.ladders, cellSize: cellSize),
                 ),
-
-                // ٣. مارە ڕەسەنەکانت
                 CustomPaint(
                   size: Size(boardSize, boardSize),
                   painter: SnakePainter(snakes: GameConstants.snakes, cellSize: cellSize),
                 ),
 
-                // ٤. مۆرەی یاریزانەکان (Tokens)
+                // مۆرەی یاریزانەکان
                 ...state.players.asMap().entries.map((entry) {
                   final index = entry.key;
                   final player = entry.value;
@@ -81,8 +90,8 @@ class GameBoard extends ConsumerWidget {
                   final pos = _getCellCenterOffset(player.position, cellSize);
 
                   return AnimatedPositioned(
-                    duration: const Duration(milliseconds: 400),
-                    curve: Curves.easeInOut,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutBack,
                     left: pos.dx - (cellSize * 0.25) + (index * 2),
                     top: pos.dy - (cellSize * 0.25) + (index * 2),
                     child: Container(
@@ -93,7 +102,7 @@ class GameBoard extends ConsumerWidget {
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 1.5),
                         boxShadow: [
-                          BoxShadow(color: player.color.withOpacity(0.5), blurRadius: 8),
+                          BoxShadow(color: player.color.withOpacity(0.6), blurRadius: 10, spreadRadius: 1),
                         ],
                       ),
                       child: Center(
