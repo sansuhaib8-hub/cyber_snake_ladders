@@ -10,7 +10,7 @@ permissions:
   id-token: write
 
 jobs:
-  # ١. بەشی وێب - هەمیشە لەگەڵ هەر پۆشێکدا ڕەن دەبێت
+  # ١. بەشی وێب - لەگەڵ هەموو پۆشێکدا کار دەکات
   deploy-web:
     runs-on: ubuntu-latest
     steps:
@@ -32,9 +32,9 @@ jobs:
     - name: Deploy to GitHub Pages
       uses: actions/deploy-pages@v4
 
-  # ٢. بەشی APK - تەنها کاتێک ڕەن دەبێت کە بنووسیت [build apk]
+  # ٢. بەشی APK - تەنها کاتێک کار دەکات کە بنووسیت apkw
   build-apk:
-    if: contains(github.event.head_commit.message, '[build apk]')
+    if: contains(github.event.head_commit.message, 'apkw')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
