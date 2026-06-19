@@ -50,6 +50,7 @@ jobs:
         
     - name: Recreate Android Folder
       run: |
+        rm -rf android
         flutter create . --platforms=android
 
     - name: Force Android SDK 34
