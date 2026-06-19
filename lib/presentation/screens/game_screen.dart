@@ -20,7 +20,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   @override
   void initState() {
     super.initState();
-    // ئامادەکردنی کۆنترۆڵەری وەشاندنی کاغەزی ئاهەنگەکە بۆ ٧ چرکە
     _confettiController = ConfettiController(duration: const Duration(seconds: 7));
   }
 
@@ -30,7 +29,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     super.dispose();
   }
 
-  // دیالۆگی گۆڕینی ناوی یاریزان (Rename)
   void _showRenameDialog(BuildContext context, int index, String currentName) {
     final textController = TextEditingController(text: currentName);
     showDialog(
@@ -39,12 +37,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         backgroundColor: const Color(0xFF0D0E15),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF00F0FF), width: 1.5),
+          side: const BorderSide(color: Color(0xFF00F0FF), width: 1.5),
         ),
         title: const Text(
           'گۆڕینی ناوی یاریزان 📝',
           style: TextStyle(color: Colors.white, fontFamily: 'monospace'),
-          textAlign: Alignment.center == null ? TextAlign.center : TextAlign.right,
+          textAlign: TextAlign.right,
         ),
         content: TextField(
           controller: textController,
@@ -75,21 +73,19 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     );
   }
 
-  // پەنجەرەی ئاهەنگی گەورەی سەرکەوتن (Celebration Overlay)
   void _showWinnerOverlay(String winnerName, Color winnerColor) {
     _confettiController.play();
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false, // ڕێگری لە داخستنی بە دوگمەی باک
+      builder: (context) => PopScope(
+        canPop: false,
         child: StatefulBuilder(
           builder: (context, setDialogState) {
             return Scaffold(
               backgroundColor: Colors.black.withOpacity(0.85),
               body: Stack(
                 children: [
-                  // تەقاندنی کاغەزی ڕەنگاوڕەنگ لە سەرەوە بۆ خوارەوە
                   Align(
                     alignment: Alignment.topCenter,
                     child: ConfettiWidget(
@@ -130,7 +126,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             style: TextStyle(
                               color: winnerColor,
                               fontSize: 34,
-                              fontWeight: FontWeight.extrabold,
+                              fontWeight: FontWeight.w800,
                               shadows: [
                                 Shadow(color: winnerColor, blurRadius: 15),
                               ],
@@ -179,7 +175,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final controller = ref.read(gameControllerProvider.notifier);
     final activePlayer = state.players[state.currentPlayerIndex];
 
-    // ئەگەر کایەکە کۆتایی هاتبوو، نیشاندانی ئاهەنگی سەرکەوتن دوای ڕێندەربوونی فڕەیمەکە
     if (state.gameState == game_enums.GameState.finished) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showWinnerOverlay(activePlayer.name, activePlayer.color);
@@ -209,7 +204,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // لیستی کارتەکانی یاریزان لەگەڵ دوگمەی پڵەس (+)
             Container(
               padding: const EdgeInsets.all(8),
               margin: const EdgeInsets.all(8),
@@ -223,7 +217,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               ),
               child: Row(
                 children: [
-                  // پیشاندانی یاریزانە ئەکتیڤەکان
                   ...List.generate(state.players.length, (index) {
                     final p = state.players[index];
                     return Expanded(
@@ -232,13 +225,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                         child: PlayerCard(
                           player: p,
                           isCurrent: index == state.currentPlayerIndex,
-                          onTap: () => _showRenameDialog(context, index, p.name), // بە پەنجەلێدان ئیدیت دەبێت
+                          onTap: () => _showRenameDialog(context, index, p.name),
                         ),
                       ),
                     );
                   }),
                   
-                  // دوگمەی زەقی پڵەس بۆ زیادکردنی یاریزانی نوێ (تا ٤ دەنک)
                   if (state.players.length < 4 && state.gameState == game_enums.GameState.idle && !state.players.any((p) => p.position > 0))
                     Padding(
                       padding: const EdgeInsets.only(left: 4.0),
