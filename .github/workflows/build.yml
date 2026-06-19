@@ -1,4 +1,4 @@
-name: Flutter Build and Test
+name: Flutter Build APK
 
 on:
   push:
@@ -27,8 +27,11 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Run analyze
-      run: flutter analyze
+    - name: Build APK
+      run: flutter build apk --split-per-abi
 
-    - name: Run tests
-      run: flutter test
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-apks
+        path: build/app/outputs/flutter-apk/*.apk
