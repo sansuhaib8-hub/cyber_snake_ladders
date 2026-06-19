@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:math' as math;
 import '../controllers/game_controller.dart';
-import '../../core/utils/board_calculator.dart';
 import '../../core/constants/game_constants.dart';
-import '../painters/snake_painter.dart';
-import '../painters/ladder_painter.dart';
 
 class GameBoard extends ConsumerWidget {
   const GameBoard({super.key});
@@ -12,163 +10,195 @@ class GameBoard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(gameControllerProvider);
-    final activePlayer = state.players[state.currentPlayerIndex];
 
-    return Container(
-      margin: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: activePlayer.color.withValues(alpha: 0.6),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: activePlayer.color.withValues(alpha: 0.3),
-            blurRadius: 35,
-            spreadRadius: 4,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: AspectRatio(
-          aspectRatio: 1.0,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final boardSize = Size(constraints.maxWidth, constraints.maxHeight);
-              final cellSize = constraints.maxWidth / 10;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final boardSize = math.min(constraints.maxWidth, constraints.maxHeight) - 16;
+        final cellSize = boardSize / 10;
 
-              return Stack(
-                children: [
-                  // Grid background with Neon 3D effects
-                  GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 10,
-                    ),
-                    itemCount: 100,
-                    itemBuilder: (context, idx) {
-                      final cellNum = BoardCalculator.getDisplayCellNumber(idx);
-                      // دیاریکردنی شێوازی ڕەنگی خانەکان بۆ دروستکردنی ستایلی شەتڕەنجی سایبەری
-                      final isEven = idx % 2 == 0;
-                      
-                      return Container(
-                        margin: const EdgeInsets.all(1.5), // دروستکردنی بۆشایی بچووک بۆ دەرکەوتنی خانەکان وەک 3D
-                        decoration: BoxDecoration(
-                          color: isEven
-                              ? const Color(0xFF0F1123)
-                              : const Color(0xFF06070D),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF00F0FF).withValues(alpha: 0.05),
-                              blurRadius: 4,
-                              spreadRadius: 0.5,
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Text(
-                            "$cellNum",
-                            style: TextStyle(
-                              fontSize: cellSize * 0.28,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFE0E6ED), // ڕەنگی سپی-مرواری گەشاوە
-                              shadows: [
-                                Shadow(
-                                  color: const Color(0xFF00F0FF).withValues(alpha: 0.8),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  // Draw snakes
-                  ...GameConstants.snakes.entries.map((entry) {
-                    return CustomPaint(
-                      size: boardSize,
-                      painter: SnakePainter(
-                        fromCell: entry.key,
-                        toCell: entry.value,
-                        boardSize: boardSize,
-                      ),
-                    );
-                  }),
-
-                  // Draw ladders
-                  ...GameConstants.ladders.entries.map((entry) {
-                    return CustomPaint(
-                      size: boardSize,
-                      painter: LadderPainter(
-                        fromCell: entry.key,
-                        toCell: entry.value,
-                        boardSize: boardSize,
-                      ),
-                    );
+        return Center(
+          child: Container(
+            width: boardSize,
+            height: boardSize,
+            decoration: BoxDecoration(
+              color: const Color(0xFF080A16),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.cyan.withValues(alpha: 0.3), width: 2),
+              boxShadow: [
+                BoxShadow(color: Colors.cyan.withValues(alpha: 0.1), blurRadius: 20, spreadRadius: 2),
+              ],
+            ),
+            child: Stack(
+              children: [
+                // ١. تۆڕی خانە شوشەییە 3D یەکان
+                GridView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 100,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
+                  itemBuilder: (context, index) {
+                    int row = index ~/ 10;
+                    int col = index % 10;
                     
-                  }),
+                    int actualRow = 9 - row;
+                    int actualCol = (actualRow % 2 == 1) ? (9 - col) : col;
+                    int cellNumber = actualRow * 10 + actualCol + 1;
 
-                  // Players with glowing 3D tokens
-                  ...List.generate(state.players.length, (index) {
-                    final player = state.players[index];
-                    final coords = BoardCalculator.getCellCoordinates(
-                      player.position,
-                      cellSize,
-                    );
+                    bool isEven = (actualRow + actualCol) % 2 == 0;
 
-                    // بۆ ئەوەی تۆپەکان ڕێک نەکەون بەسەر یەکدا، کەمێک لایان دەدەین ئەگەر لە هەمان خانەدا بوون
-                    double offset = index * 3.0;
-
-                    return AnimatedPositioned(
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeInOut,
-                      left: coords.dx + (cellSize * 0.25) - 10 + offset,
-                      top: coords.dy + (cellSize * 0.25) - 10 + offset,
-                      width: cellSize * 0.55,
-                      height: cellSize * 0.55,
-                      child: AnimatedScale(
-                        scale: index == state.currentPlayerIndex ? 1.25 : 1.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                Colors.white,
-                                player.color,
-                                player.color.withValues(alpha: 0.9),
-                                const Color(0xFF000000),
-                              ],
-                              stops: const [0.0, 0.4, 0.8, 1.0],
-                            ),
-                            border: Border.all(color: Colors.white, width: 2.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: player.color.withValues(alpha: 0.9),
-                                blurRadius: 20,
-                                spreadRadius: 3,
-                              ),
-                            ],
-                          ),
+                    return Container(
+                      margin: const EdgeInsets.all(1.5),
+                      decoration: BoxDecoration(
+                        // دیزاینی شوشەیی نیمچە ڕووناک
+                        color: isEven ? Colors.white.withValues(alpha: 0.04) : Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 0.5),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.4), offset: const Offset(1, 1), blurRadius: 1),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          '$cellNumber',
+                          style: const TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ),
                     );
-                  }),
-                ],
-              );
-            },
+                  },
+                ),
+
+                // ٢. کێشانی مار و پەیژە ئەکشنەکان بەپێی پۆزیشنی ڕاستەقینە
+                CustomPaint(
+                  size: Size(boardSize, boardSize),
+                  painter: BoardElementsPainter(cellSize: cellSize),
+                ),
+
+                // ٣. پیشاندانی مۆرەی یاریزانەکان لەسەر بۆردەکە
+                ...state.players.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final player = entry.value;
+                  if (player.position == 0) return const SizedBox.shrink();
+
+                  final pos = _getCellOffset(player.position, cellSize, boardSize);
+                  
+                  // لادانی جیاواز بۆ مۆرەکان ئەگەر لە هەمان خانە بوون
+                  double offsetMultiplier = (index - 1) * 6.0;
+
+                  return AnimatedPositioned(
+                    duration: const Duration(milliseconds: 300),
+                    left: pos.dx + 4 + offsetMultiplier,
+                    top: pos.dy + 4 + offsetMultiplier,
+                    child: Container(
+                      width: cellSize - 12,
+                      height: cellSize - 12,
+                      decoration: BoxDecoration(
+                        color: player.color,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(color: player.color, blurRadius: 10, spreadRadius: 1),
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.5), offset: const Offset(2, 2), blurRadius: 4),
+                        ],
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                      child: Center(
+                        child: Text(
+                          player.name.characters.take(1).toString(),
+                          style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
+
+  static Offset _getCellOffset(int cellNumber, double cellSize, double boardSize) {
+    int zeroBased = cellNumber - 1;
+    int row = zeroBased ~/ 10;
+    int col = zeroBased % 10;
+    if (row % 2 == 1) col = 9 - col;
+    return Offset(col * cellSize, (9 - row) * cellSize);
+  }
+}
+
+class BoardElementsPainter extends CustomPainter {
+  final double cellSize;
+  BoardElementsPainter({required this.cellSize});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // کێشانی پەیژە مۆدێرنەکان
+    final ladderPaint = Paint()
+      ..color = const Color(0xFFFFCC00)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5
+      ..strokeCap = StrokeCap.round;
+
+    GameConstants.ladders.forEach((start, end) {
+      final startOffset = _getCenter(start, size.width);
+      final endOffset = _getCenter(end, size.width);
+
+      // کێشانی قاچە لایەکان
+      canvas.drawLine(startOffset + const Offset(-6, 0), endOffset + const Offset(-6, 0), ladderPaint);
+      canvas.drawLine(startOffset + const Offset(6, 0), endOffset + const Offset(6, 0), ladderPaint);
+
+      // پلەکان
+      int steps = 5;
+      for (int i = 1; i < steps; i++) {
+        double t = i / steps;
+        Offset p = Offset.lerp(startOffset, endOffset, t)!;
+        canvas.drawLine(p + const Offset(-9, 0), p + const Offset(9, 0), ladderPaint..strokeWidth = 2);
+      }
+    });
+
+    // کێشانی ماری ڕاستەقینە بە لاری و زیکزاکی جوانی نیۆن
+    GameConstants.snakes.forEach((start, end) {
+      final startOffset = _getCenter(start, size.width); // سەر
+      final endOffset = _getCenter(end, size.width); // کلک
+
+      final snakePaint = Paint()
+        ..color = const Color(0xFFFF2A6D)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5.0
+        ..strokeCap = StrokeCap.round;
+
+      final path = Path();
+      path.moveTo(startOffset.dx, startOffset.top == null ? startOffset.dy : startOffset.dy);
+
+      // دروستکردنی لاری زیکزاک و شەپۆلی سروشتی بۆ مارەکە
+      Offset mid1 = Offset.lerp(startOffset, endOffset, 0.3)!;
+      Offset mid2 = Offset.lerp(startOffset, endOffset, 0.7)!;
+      
+      path.cubicTo(
+        mid1.dx + 25, mid1.dy - 10,
+        mid2.dx - 25, mid2.dy + 10,
+        endOffset.dx, endOffset.dy,
+      );
+
+      // کێشانی تیشکی نیۆنی مارەکە
+      canvas.drawPath(path, snakePaint..color = const Color(0xFFFF2A6D).withValues(alpha: 0.3)..strokeWidth = 10);
+      canvas.drawPath(path, snakePaint..color = const Color(0xFFFF2A6D)..strokeWidth = 4.5);
+
+      // سەر و چاوی مارەکە (ماری واقیعی)
+      final headPaint = Paint()..color = const Color(0xFFFF2A6D)..style = PaintingStyle.fill;
+      canvas.drawCircle(startOffset, 6, headPaint);
+      canvas.drawCircle(startOffset + const Offset(-2, -2), 1.5, Paint()..color = Colors.white);
+      canvas.drawCircle(startOffset + const Offset(2, -2), 1.5, Paint()..color = Colors.white);
+    });
+  }
+
+  Offset _getCenter(int cellNumber, double boardSize) {
+    int zeroBased = cellNumber - 1;
+    int row = zeroBased ~/ 10;
+    int col = zeroBased % 10;
+    if (row % 2 == 1) col = 9 - col;
+    return Offset((col + 0.5) * cellSize, (9 - row + 0.5) * cellSize);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
