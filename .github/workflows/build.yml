@@ -1,15 +1,40 @@
-name: Flutter Build APK
+name: Flutter Web Deploy and APK Build
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  build:
+  # ١. بەشی وێب
+  deploy-web:
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+    - name: Create Web Folder
+      run: flutter create . --platforms=web
+    - name: Install dependencies
+      run: flutter pub get
+    - name: Build Web
+      run: flutter build web --base-href "/${{ github.event.repository.name }}/"
+    - name: Upload Web Artifacts
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: build/web
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v4
 
+  # ٢. بەشی APK لەگەڵ چاککردنی وەشانەکان
+  build-apk:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
@@ -25,13 +50,14 @@ jobs:
         channel: 'stable'
 
     - name: Recreate Android Folder
-      run: flutter create . --platforms=android
-
+      run: |
+        flutter create . --platforms=android
+        
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Build APK
-      run: flutter build apk --split-per-abi
+    - name: Build APK with Stacktrace
+      run: flutter build apk --split-per-abi --release
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
