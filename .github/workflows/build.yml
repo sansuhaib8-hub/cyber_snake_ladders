@@ -32,7 +32,7 @@ jobs:
     - name: Deploy to GitHub Pages
       uses: actions/deploy-pages@v4
 
-  # ٢. بەشی APK
+  # ٢. بەشی APK (چاککردنی ڕیشەیی وەشانی ئاندرۆید)
   build-apk:
     runs-on: ubuntu-latest
     steps:
@@ -55,17 +55,24 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Force Compile SDK to 34
+    - name: Force Android SDK 34 in Build.gradle
       run: |
-        # لێرەدا سەرەتا دەپشکنیین فایلەکە لە کوێیە پاشان دەستکاری دەکەین
-        if [ -f android/app/build.gradle ]; then
-          sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' android/app/build.gradle
-          sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' android/app/build.gradle
-        fi
-        
-        # ڕێگای سەرەکی و نوێی فڵاتەر بۆ ڕێکخستنی وەشانەکان
-        echo "flutter.compileSdkVersion=34" >> android/local.properties
-        echo "flutter.targetSdkVersion=34" >> android/local.properties
+        # گۆڕینی بەهاکانی ناو فایلی build.gradle ی سەرەکی بۆ ناچارکردنی گشت ساب-پڕۆژەکان (وەک audioplayers) کە بە ٣٤ کۆمپایل ببن
+        cat << 'SUBEOF' >> android/build.gradle
+
+        subprojects {
+            afterEvaluate { project ->
+                if (project.hasProperty("android")) {
+                    project.android {
+                        compileSdkVersion 34
+                        defaultConfig {
+                            targetSdkVersion 34
+                        }
+                    }
+                }
+            }
+        }
+        SUBEOF
 
     - name: Build APK
       run: flutter build apk --split-per-abi --release
