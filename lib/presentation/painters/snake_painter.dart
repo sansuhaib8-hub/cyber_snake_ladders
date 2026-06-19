@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'import 'dart:math' as math;
+import 'dart:math' as math;
 
 class SnakePainter extends CustomPainter {
   final Map<int, int> snakes;
