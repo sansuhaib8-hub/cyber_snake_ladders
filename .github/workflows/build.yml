@@ -32,7 +32,7 @@ jobs:
     - name: Deploy to GitHub Pages
       uses: actions/deploy-pages@v4
 
-  # ٢. بەشی APK لەگەڵ چاککردنی وەشانەکان
+  # ٢. بەشی APK (لەگەڵ ناچارکردنی کۆمپاڵ بۆ Android 34)
   build-apk:
     runs-on: ubuntu-latest
     steps:
@@ -53,10 +53,20 @@ jobs:
       run: |
         flutter create . --platforms=android
         
+    - name: Force Compile SDK to 34
+      run: |
+        # گۆڕینی وەشانی compileSdkVersion لە ناو فایلی build.gradle ی ئاندرۆیددا بۆ ٣٤
+        sed -i 's/compileSdkVersion .*/compileSdkVersion 34/g' android/app/build.gradle
+        sed -i 's/targetSdkVersion .*/targetSdkVersion 34/g' android/app/build.gradle
+        
+        # ئەگەر فڵاتەری نوێ فۆرماتەکەی گۆڕیبێت بۆ flutter.compileSdkVersion، ئەمە جێگیر دەکات
+        echo "flutter.compileSdkVersion=34" >> android/local.properties
+        echo "flutter.targetSdkVersion=34" >> android/local.properties
+
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Build APK with Stacktrace
+    - name: Build APK
       run: flutter build apk --split-per-abi --release
 
     - name: Upload APK Artifact
