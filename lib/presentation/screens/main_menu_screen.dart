@@ -31,7 +31,7 @@ class MainMenuScreen extends StatelessWidget {
               'Cyber Snake & Ladders',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 50),
@@ -71,7 +71,7 @@ class MainMenuScreen extends StatelessWidget {
             Text(
               'v1.0.0',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 12,
               ),
             ),
@@ -101,10 +101,10 @@ class MainMenuScreen extends StatelessWidget {
           foregroundColor: color,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
-            side: BorderSide(color: color.withOpacity(0.5), width: 2),
+            side: BorderSide(color: color.withValues(alpha: 0.5), width: 2),
           ),
           elevation: 8,
-          shadowColor: color.withOpacity(0.5),
+          shadowColor: color.withValues(alpha: 0.5),
         ),
       ),
     );

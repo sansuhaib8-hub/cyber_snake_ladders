@@ -37,7 +37,6 @@ class GameScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // کارتی یاریزانەکان
             Container(
               padding: const EdgeInsets.all(8),
               margin: const EdgeInsets.all(8),
@@ -45,9 +44,9 @@ class GameScreen extends ConsumerWidget {
                 color: const Color(0xFF0D0E15),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: activePlayer.color.withOpacity(0.3),
-                  width: 1,                ),
-              ),
+                  color: activePlayer.color.withValues(alpha: 0.3),
+                  width: 1,
+                ),              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: List.generate(state.players.length, (index) {
@@ -59,16 +58,12 @@ class GameScreen extends ConsumerWidget {
                 }),
               ),
             ),
-
-            // بۆردی یاری
             Expanded(
               child: GestureDetector(
                 onTap: state.gameState.name == 'idle' ? controller.rollDice : null,
                 child: const GameBoard(),
               ),
             ),
-
-            // نامە
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
@@ -80,8 +75,6 @@ class GameScreen extends ConsumerWidget {
                 ),
               ),
             ),
-
-            // زار
             DiceWidget(
               value: state.diceValue,
               isRolling: state.gameState.name == 'rolling',
@@ -95,14 +88,14 @@ class GameScreen extends ConsumerWidget {
     );
   }
 
-  void _showResetDialog(BuildContext context, GameController controller) {    showDialog(
+  void _showResetDialog(BuildContext context, GameController controller) {
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF11121C),
         title: const Text(
           'دەستپێکردنەوە؟',
-          style: TextStyle(color: Colors.white),
-        ),
+          style: TextStyle(color: Colors.white),        ),
         content: const Text(
           'ئایا دڵنیایت دەتەوێت یاریەکە دەستپێ بکەیتەوە؟',
           style: TextStyle(color: Colors.white70),

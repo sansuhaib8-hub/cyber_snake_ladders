@@ -17,12 +17,12 @@ class GameBoard extends ConsumerWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: activePlayer.color.withOpacity(0.4),
+          color: activePlayer.color.withValues(alpha: 0.4),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: activePlayer.color.withOpacity(0.2),
+            color: activePlayer.color.withValues(alpha: 0.2),
             blurRadius: 30,
             spreadRadius: 3,
           ),
@@ -38,7 +38,6 @@ class GameBoard extends ConsumerWidget {
 
               return Stack(
                 children: [
-                  // بۆردی خانەکان
                   GridView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -46,8 +45,8 @@ class GameBoard extends ConsumerWidget {
                     ),
                     itemCount: 100,
                     itemBuilder: (context, idx) {
-                      final cellNum = BoardCalculator.getDisplayCellNumber(idx);                      final isSnakeHead = GameConstants.snakes.containsKey(cellNum);
-                      final isLadderBottom = GameConstants.ladders.containsKey(cellNum);
+                      final cellNum = BoardCalculator.getDisplayCellNumber(idx);
+                      final isSnakeHead = GameConstants.snakes.containsKey(cellNum);                      final isLadderBottom = GameConstants.ladders.containsKey(cellNum);
 
                       return Container(
                         decoration: BoxDecoration(
@@ -62,10 +61,10 @@ class GameBoard extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: cellSize * 0.3,
                               color: isSnakeHead
-                                  ? Colors.redAccent.withOpacity(0.7)
+                                  ? Colors.redAccent.withValues(alpha: 0.7)
                                   : isLadderBottom
-                                      ? Colors.amber.withOpacity(0.7)
-                                      : Colors.white.withOpacity(0.25),
+                                      ? Colors.amber.withValues(alpha: 0.7)
+                                      : Colors.white.withValues(alpha: 0.25),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -73,8 +72,6 @@ class GameBoard extends ConsumerWidget {
                       );
                     },
                   ),
-
-                  // یاریزانەکان
                   ...List.generate(state.players.length, (index) {
                     final player = state.players[index];
                     final coords = BoardCalculator.getCellCoordinates(
@@ -95,16 +92,16 @@ class GameBoard extends ConsumerWidget {
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: RadialGradient(                              colors: [
+                            gradient: RadialGradient(
+                              colors: [
                                 Colors.white,
-                                player.color,
-                                player.color.withOpacity(0.8),
+                                player.color,                                player.color.withValues(alpha: 0.8),
                               ],
                             ),
                             border: Border.all(color: Colors.white, width: 2),
                             boxShadow: [
                               BoxShadow(
-                                color: player.color.withOpacity(0.8),
+                                color: player.color.withValues(alpha: 0.8),
                                 blurRadius: 15,
                                 spreadRadius: 2,
                               ),

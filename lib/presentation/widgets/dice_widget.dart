@@ -36,7 +36,7 @@ class _DiceWidgetState extends State<DiceWidget>
   }
 
   @override
-  void didUpdateWidget(Widget oldWidget) {
+  void didUpdateWidget(covariant DiceWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isRolling && !oldWidget.isRolling) {
       _controller.forward(from: 0);
@@ -66,7 +66,7 @@ class _DiceWidgetState extends State<DiceWidget>
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.color.withOpacity(0.5),
+                    color: widget.color.withValues(alpha: 0.5),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),

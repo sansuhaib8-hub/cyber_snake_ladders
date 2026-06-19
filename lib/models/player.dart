@@ -38,7 +38,7 @@ class Player {
       'id': id,
       'name': name,
       'position': position,
-      'color': color.value,
+      'color': color.toARGB32(),
       'isWinner': isWinner,
       'hasShield': hasShield,
     };

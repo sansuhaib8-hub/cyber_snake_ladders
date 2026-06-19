@@ -27,11 +27,11 @@ class PlayerCard extends StatelessWidget {
             width: 2,
           ),
           borderRadius: BorderRadius.circular(12),
-          color: isCurrent ? player.color.withOpacity(0.15) : Colors.transparent,
+          color: isCurrent ? player.color.withValues(alpha: 0.15) : Colors.transparent,
           boxShadow: isCurrent
               ? [
                   BoxShadow(
-                    color: player.color.withOpacity(0.4),
+                    color: player.color.withValues(alpha: 0.4),
                     blurRadius: 12,
                     spreadRadius: 1,
                   ),
@@ -52,7 +52,7 @@ class PlayerCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: player.color.withOpacity(0.6),
+                        color: player.color.withValues(alpha: 0.6),
                         blurRadius: 6,
                         spreadRadius: 1,
                       ),
@@ -74,7 +74,7 @@ class PlayerCard extends StatelessWidget {
             Text(
               "خانەی: ${player.position}",
               style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
+                color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 11,
               ),
             ),
