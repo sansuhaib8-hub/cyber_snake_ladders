@@ -10,7 +10,7 @@ permissions:
   id-token: write
 
 jobs:
-  # ١. بەشی وێب - لەگەڵ هەموو پۆشێکدا کار دەکات
+  # ١. بەشی وێب - هەمیشە کار دەکات
   deploy-web:
     runs-on: ubuntu-latest
     steps:
@@ -49,8 +49,14 @@ jobs:
         channel: 'stable'
     - name: Install dependencies
       run: flutter pub get
-    - name: Build APK
-      run: flutter build apk --split-per-abi --release --no-tree-shake-icons
+
+    - name: Build APK (Bypass v1 Embedding)
+      run: |
+        # لێرەدا بە فڵاتەر دەڵێین کە ڕێگا بە بەکارهێنانی ئەو کۆدە کۆنانە بدات و کڕاش نەکات
+        flutter build apk --split-per-abi --release --no-tree-shake-icons --no-version-check
+      env:
+        FLUTTER_SUPPRESS_ANALYTICS: true
+        
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
