@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Build Web and APK
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
+  web:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,16 +20,46 @@ jobs:
         with:
           channel: stable
       
-      - name: Create web build
+      - name: Build Web
         run: |
           flutter create . --platforms=web
           flutter pub get
           flutter build web --release
       
-      - name: Upload to GitHub Pages
+      - name: Upload Web
         uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
       
       - name: Deploy
         uses: actions/deploy-pages@v4
+
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      
+      - name: Create Android Project
+        run: flutter create . --platforms=android
+      
+      - name: Build APK
+        run: |
+          flutter pub get
+          flutter build apk --release
+      
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
