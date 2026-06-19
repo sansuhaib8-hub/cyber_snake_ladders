@@ -167,7 +167,7 @@ class BoardElementsPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       final path = Path();
-      path.moveTo(startOffset.dx, startOffset.top == null ? startOffset.dy : startOffset.dy);
+      path.moveTo(startOffset.dx, startOffset.dy);
 
       // دروستکردنی لاری زیکزاک و شەپۆلی سروشتی بۆ مارەکە
       Offset mid1 = Offset.lerp(startOffset, endOffset, 0.3)!;
