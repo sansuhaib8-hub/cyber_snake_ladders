@@ -76,6 +76,10 @@ jobs:
     - name: Build APK
       run: flutter build apk --split-per-abi --release --no-tree-shake-icons
 
+    - name: Debug - List build outputs
+      if: always()
+      run: find . -name "*.apk" -o -name "outputs" -type d
+
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
