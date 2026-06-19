@@ -32,7 +32,7 @@ jobs:
     - name: Deploy to GitHub Pages
       uses: actions/deploy-pages@v4
 
-  # ٢. بەشی APK - تەنها کاتێک کار دەکات کە بنووسیت apkw
+  # ٢. بەشی APK - تەنها لەگەڵ apkw کار دەکات
   build-apk:
     if: contains(github.event.head_commit.message, 'apkw')
     runs-on: ubuntu-latest
@@ -48,10 +48,12 @@ jobs:
       with:
         channel: 'stable'
         
-    - name: Recreate Android Folder
+    - name: Recreate Android Project
       run: |
-        rm -rf android
         flutter create . --platforms=android
+        if [ -f android/app/src/main/AndroidManifest.xml ]; then
+          sed -i '/flutterEmbedding/d' android/app/src/main/AndroidManifest.xml
+        fi
 
     - name: Force Android SDK 34
       run: |
@@ -73,15 +75,17 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Build APK
-      run: flutter build apk --split-per-abi --release --no-tree-shake-icons
-
-    - name: Debug - List build outputs
-      if: always()
-      run: find . -name "*.apk" -o -name "outputs" -type d
+    - name: Build APK via Direct Gradle (Bypass Watcher)
+      run: |
+        # لێرەدا فەرمانی فڵاتەر بەکارناهێنین بۆ ئەوەی لۆگەکەی کڕاش نەبێت
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleRelease --no-daemon
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: release-apks
-        path: build/app/outputs/flutter-apk/*.apk
+        path: |
+          build/app/outputs/flutter-apk/*.apk
+          android/app/build/outputs/apk/release/*.apk
