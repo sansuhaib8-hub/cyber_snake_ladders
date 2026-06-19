@@ -10,7 +10,6 @@ permissions:
   id-token: write
 
 jobs:
-  # ١. بەشی وێب
   deploy-web:
     runs-on: ubuntu-latest
     steps:
@@ -32,51 +31,23 @@ jobs:
     - name: Deploy to GitHub Pages
       uses: actions/deploy-pages@v4
 
-  # ٢. بەشی APK (چاککردنی ڕیشەیی وەشانی ئاندرۆید)
   build-apk:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
     - name: Set up Java
       uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: '17'
-
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
         channel: 'stable'
-
-    - name: Recreate Android Folder
-      run: flutter create . --platforms=android
-        
     - name: Install dependencies
       run: flutter pub get
-
-    - name: Force Android SDK 34 in Build.gradle
-      run: |
-        # گۆڕینی بەهاکانی ناو فایلی build.gradle ی سەرەکی بۆ ناچارکردنی گشت ساب-پڕۆژەکان (وەک audioplayers) کە بە ٣٤ کۆمپایل ببن
-        cat << 'SUBEOF' >> android/build.gradle
-
-        subprojects {
-            afterEvaluate { project ->
-                if (project.hasProperty("android")) {
-                    project.android {
-                        compileSdkVersion 34
-                        defaultConfig {
-                            targetSdkVersion 34
-                        }
-                    }
-                }
-            }
-        }
-        SUBEOF
-
     - name: Build APK
-      run: flutter build apk --split-per-abi --release
-
+      run: flutter build apk --split-per-abi --release --no-tree-shake-icons
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
