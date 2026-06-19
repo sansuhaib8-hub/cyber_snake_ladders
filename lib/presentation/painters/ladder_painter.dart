@@ -19,13 +19,13 @@ class LadderPainter extends CustomPainter {
 
     // 3D shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.4)
+      ..color = Colors.black.withValues(alpha: 0.4)
       ..strokeWidth = 10
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
 
-    // Ladder rails (two parallel lines)
+    // Ladder rails gradient
     final railPaint = Paint()
       ..shader = LinearGradient(
         colors: [
@@ -41,7 +41,9 @@ class LadderPainter extends CustomPainter {
     // Calculate perpendicular offset for two rails
     final dx = toPos.dx - fromPos.dx;
     final dy = toPos.dy - fromPos.dy;
-    final length = (dx * dx + dy * dy);
+    final length = dx * dx + dy * dy;
+    if (length == 0) return;
+    
     final perpX = -dy / length * 15;
     final perpY = dx / length * 15;
 
@@ -80,7 +82,7 @@ class LadderPainter extends CustomPainter {
 
     // 3D highlight on top
     final highlightPaint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
+      ..color = Colors.white.withValues(alpha: 0.3)
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 

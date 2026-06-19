@@ -19,7 +19,7 @@ class SnakePainter extends CustomPainter {
 
     // 3D shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
+      ..color = Colors.black.withValues(alpha: 0.5)
       ..strokeWidth = 18
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke
@@ -40,13 +40,14 @@ class SnakePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    // Draw curved snake    final path = Path();
+    // Draw curved snake - دروستکردنی path
+    final path = Path();
     path.moveTo(fromPos.dx, fromPos.dy);
-    
+
     final midX = (fromPos.dx + toPos.dx) / 2;
     final midY = (fromPos.dy + toPos.dy) / 2;
     final offset = 30.0;
-    
+
     path.quadraticBezierTo(
       midX + offset,
       midY - offset,
@@ -56,7 +57,7 @@ class SnakePainter extends CustomPainter {
 
     // Shadow
     canvas.drawPath(path, shadowPaint);
-    
+
     // Snake body
     canvas.drawPath(path, snakePaint);
 
@@ -73,7 +74,7 @@ class SnakePainter extends CustomPainter {
       );
 
     canvas.drawCircle(fromPos, 12, headPaint);
-    
+
     // Eyes
     final eyePaint = Paint()..color = Colors.white;
     canvas.drawCircle(
@@ -89,4 +90,5 @@ class SnakePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;}
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
